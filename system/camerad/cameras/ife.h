@@ -5,6 +5,38 @@
 #include "system/camerad/cameras/hw.h"
 #include "system/camerad/sensors/sensor.h"
 
+int build_common_ife_bps(uint8_t *dst, const CameraConfig cam, const SensorInfo *s, std::vector<uint32_t> &patches, bool ife) {
+  uint8_t *start = dst;
+
+  /*
+    Common between IFE and BPS.
+  */
+
+  // IFE -> BPS addresses
+  /*
+  std::map<uint32_t, uint32_t> addrs = {
+    {0xf30, 0x3468},
+  };
+  */
+
+  // YUV
+  dst += write_cont(dst, ife ? 0xf30 : 0x3468, {
+    0x00680208,
+    0x00000108,
+    0x00400000,
+    0x03ff0000,
+    0x01c01ed8,
+    0x00001f68,
+    0x02000000,
+    0x03ff0000,
+    0x1fb81e88,
+    0x000001c0,
+    0x02000000,
+    0x03ff0000,
+  });
+
+  return dst - start;
+}
 
 int build_update(uint8_t *dst, const CameraConfig cam, const SensorInfo *s, std::vector<uint32_t> &patches) {
   uint8_t *start = dst;
@@ -73,7 +105,7 @@ int build_update(uint8_t *dst, const CameraConfig cam, const SensorInfo *s, std:
 }
 
 
-int build_initial_config(uint8_t *dst, const CameraConfig cam, const SensorInfo *s, std::vector<uint32_t> &patches) {
+int build_initial_config(uint8_t *dst, const CameraConfig cam, const SensorInfo *s, std::vector<uint32_t> &patches, uint32_t out_width, uint32_t out_height) {
   uint8_t *start = dst;
 
   // start with the every frame config
@@ -150,31 +182,15 @@ int build_initial_config(uint8_t *dst, const CameraConfig cam, const SensorInfo 
   dst += write_dmi(dst, &addr, s->gamma_lut_rgb.size()*sizeof(uint32_t), 0xc24, 30);  // R
   patches.push_back(addr - (uint64_t)start);
 
-  // YUV
-  dst += write_cont(dst, 0xf30, {
-    0x00680208,
-    0x00000108,
-    0x00400000,
-    0x03ff0000,
-    0x01c01ed8,
-    0x00001f68,
-    0x02000000,
-    0x03ff0000,
-    0x1fb81e88,
-    0x000001c0,
-    0x02000000,
-    0x03ff0000,
-  });
-
   // output size/scaling
   dst += write_cont(dst, 0xa3c, {
     0x00000003,
-    ((s->frame_width - 1) << 16) | (s->frame_width - 1),
+    ((out_width - 1) << 16) | (s->frame_width - 1),
     0x30036666,
     0x00000000,
     0x00000000,
     s->frame_width - 1,
-    ((s->frame_height - 1) << 16) | (s->frame_height - 1),
+    ((out_height - 1) << 16) | (s->frame_height - 1),
     0x30036666,
     0x00000000,
     0x00000000,
@@ -182,12 +198,12 @@ int build_initial_config(uint8_t *dst, const CameraConfig cam, const SensorInfo 
   });
   dst += write_cont(dst, 0xa68, {
     0x00000003,
-    ((s->frame_width/2 - 1) << 16) | (s->frame_width - 1),
+    ((out_width / 2 - 1) << 16) | (s->frame_width - 1),
     0x3006cccc,
     0x00000000,
     0x00000000,
     s->frame_width - 1,
-    ((s->frame_height/2 - 1) << 16) | (s->frame_height - 1),
+    ((out_height / 2 - 1) << 16) | (s->frame_height - 1),
     0x3006cccc,
     0x00000000,
     0x00000000,
@@ -196,12 +212,12 @@ int build_initial_config(uint8_t *dst, const CameraConfig cam, const SensorInfo 
 
   // cropping
   dst += write_cont(dst, 0xe10, {
-    s->frame_height - 1,
-    s->frame_width - 1,
+    out_height - 1,
+    out_width - 1,
   });
   dst += write_cont(dst, 0xe30, {
-    s->frame_height/2 - 1,
-    s->frame_width - 1,
+    out_height / 2 - 1,
+    out_width - 1,
   });
   dst += write_cont(dst, 0xe18, {
     0x0ff00000,
@@ -211,6 +227,8 @@ int build_initial_config(uint8_t *dst, const CameraConfig cam, const SensorInfo 
     0x0ff00000,
     0x00000017,
   });
+
+  dst += build_common_ife_bps(dst, cam, s, patches, true);
 
   return dst - start;
 }

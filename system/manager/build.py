@@ -5,10 +5,10 @@ from pathlib import Path
 
 # NOTE: Do NOT import anything here that needs be built (e.g. params)
 from openpilot.common.basedir import BASEDIR
-from openpilot.common.spinner import Spinner
-from openpilot.common.text_window import TextWindow
-from openpilot.system.hardware import AGNOS
 from openpilot.common.swaglog import cloudlog, add_file_handler
+from openpilot.system.hardware import HARDWARE, AGNOS
+from openpilot.system.ui.spinner import Spinner
+from openpilot.system.ui.text import TextWindow
 from openpilot.system.version import get_build_metadata
 
 MAX_CACHE_SIZE = 4e9 if "CI" in os.environ else 2e9
@@ -25,6 +25,10 @@ def build(spinner: Spinner, dirty: bool = False, minimal: bool = False) -> None:
     nproc = 2
 
   extra_args = ["--minimal"] if minimal else []
+
+  if AGNOS:
+    HARDWARE.set_power_save(False)
+    os.sched_setaffinity(0, range(8))  # ensure we can use the isolcpus cores
 
   # building with all cores can result in using too
   # much memory, so retry with less parallelism
@@ -84,7 +88,7 @@ def build(spinner: Spinner, dirty: bool = False, minimal: bool = False) -> None:
 
 
 if __name__ == "__main__":
-  spinner = Spinner()
-  spinner.update_progress(0, 100)
-  build_metadata = get_build_metadata()
-  build(spinner, build_metadata.openpilot.is_dirty, minimal = AGNOS)
+  with Spinner() as spinner:
+    spinner.update_progress(0, 100)
+    build_metadata = get_build_metadata()
+    build(spinner, build_metadata.openpilot.is_dirty, minimal = AGNOS)
