@@ -128,10 +128,6 @@ if __name__ == '__main__':
   parser.add_argument('--keyboard', action='store_true', help='Use your keyboard instead of a joystick')
   args = parser.parse_args()
 
-  if not Params().get_bool("IsOffroad") and "ZMQ" not in os.environ:
-    print("The car must be off before running joystick_control.")
-    exit()
-
   print()
   if args.keyboard:
     print('Gas/brake control: `W` and `S` keys')
