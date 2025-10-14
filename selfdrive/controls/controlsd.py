@@ -114,7 +114,7 @@ class Controls:
     actuators.accel = float(self.LoC.update(CC.longActive, CS, long_plan.aTarget, long_plan.shouldStop, pid_accel_limits))
 
     if len(long_plan.speeds):
-      actuators.speed = long_plan.speeds[-1]
+      actuators.speed = long_plan.speeds[0]
 
     # Steering PID loop and lateral MPC
     # Reset desired curvature to current to avoid violating the limits on engage
