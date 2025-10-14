@@ -50,6 +50,7 @@ def limit_accel_in_turns(v_ego, angle_steers, a_target, CP):
 
 class LongitudinalPlanner:
   def __init__(self, CP, init_v=0.0, init_a=0.0, dt=DT_MDL):
+    self.output_v_target = 0.0
     self.CP = CP
     self.mpc = LongitudinalMpc(dt=dt)
     # TODO remove mpc modes when TR released
@@ -173,6 +174,7 @@ class LongitudinalPlanner:
       accel_clip[idx] = np.clip(accel_clip[idx], self.prev_accel_clip[idx] - 0.05, self.prev_accel_clip[idx] + 0.05)
     self.output_a_target = np.clip(output_a_target, accel_clip[0], accel_clip[1])
     self.prev_accel_clip = accel_clip
+    self.output_v_target = output_v_target
 
   def publish(self, sm, pm):
     plan_send = messaging.new_message('longitudinalPlan')
@@ -193,6 +195,7 @@ class LongitudinalPlanner:
     longitudinalPlan.fcw = self.fcw
 
     longitudinalPlan.aTarget = float(self.output_a_target)
+    longitudinalPlan.vTarget = float(self.output_v_target)
     longitudinalPlan.shouldStop = bool(self.output_should_stop)
     longitudinalPlan.allowBrake = True
     longitudinalPlan.allowThrottle = bool(self.allow_throttle)
