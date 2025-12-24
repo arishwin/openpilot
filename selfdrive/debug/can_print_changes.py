@@ -107,3 +107,4 @@ if __name__ == "__main__":
     new_lr = LogReader(args.comp)
 
   can_printer(args.bus, init_msgs=init_lr, new_msgs=new_lr, table=args.table)
+
