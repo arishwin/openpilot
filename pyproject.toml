@@ -49,7 +49,7 @@ dependencies = [
   # logging
   "pyzmq",
   "sentry-sdk",
-  "xattr", # used in place of 'os.getxattr' for macos compatibility
+  "xattr",  # used in place of 'os.getxattr' for macOS compatibility
 
   # athena
   "PyJWT",
@@ -72,7 +72,7 @@ dependencies = [
   "zstandard",
 
   # ui
-  "raylib < 5.5.0.3", # TODO: unpin when they fix https://github.com/electronstudio/raylib-python-cffi/issues/186
+  "raylib > 5.5.0.3",
   "qrcode",
   "mapbox-earcut",
 ]
@@ -85,6 +85,7 @@ docs = [
 ]
 
 testing = [
+  "coverage",
   "hypothesis ==6.47.*",
   "mypy",
   "pytest",
@@ -115,7 +116,7 @@ dev = [
   "pyautogui",
   "pygame",
   "pyopencl; platform_machine != 'aarch64'", # broken on arm64
-  "pytools < 2024.1.11; platform_machine != 'aarch64'", # pyopencl use a broken version
+  "pytools>=2025.1.6; platform_machine != 'aarch64'",
   "pywinctl",
   "pyprof2calltree",
   "tabulate",
@@ -125,7 +126,7 @@ dev = [
 
 tools = [
   "metadrive-simulator @ https://github.com/commaai/metadrive/releases/download/MetaDrive-minimal-0.4.2.4/metadrive_simulator-0.4.2.4-py3-none-any.whl ; (platform_machine != 'aarch64')",
-  "dearpygui>=2.1.0",
+  "dearpygui>=2.1.0; (sys_platform != 'linux' or platform_machine != 'aarch64')", # not vended for linux aarch64
 ]
 
 [project.urls]
